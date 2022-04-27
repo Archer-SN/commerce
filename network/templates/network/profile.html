@@ -1,0 +1,34 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block title %}
+    {{ user_data.username }} Profile
+{% endblock %}
+
+{% block head %}
+    <script src="{% static 'network/follow.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div>
+        <h1 id="profile-name">{{ user_data.username }}</h1>
+        <p>
+            <b>Total Followers:</b>
+            <span id="total-followers">{{ user_data.total_followers }}</span>
+        </p>
+        <p>
+            <b>Total Following:</b>
+            <span id="total-following">{{ user_data.total_following }}</span>
+        </p>
+        {% if user_data.id != request.user.id and request.user.is_authenticated %}
+            {% if is_following %}
+                <button id="follow-btn" class="btn btn-primary" data-id="{{ user_data.id }}">Unfollow</button>
+            {% else %}
+                <button id="follow-btn" class="btn btn-primary" data-id="{{ user_data.id }}">Follow</button>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% include "network/content.html" %}
+    
+{% endblock %}

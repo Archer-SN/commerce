@@ -1,0 +1,15 @@
+<!--Used for rendering posts and comments-->
+
+{% for post in posts %}
+    <div>
+        <a href="{% url 'profile' post.author.id %}" class="h5">{{ post.author.username }}</a>
+        <p>Edit</p>
+        <p class="content">{{ post.content }}</p>
+        <p class="text-muted">{{ post.date_created }}</p>
+        <button class="like-post-btn" data-id="{{ post.id }}"></button>
+        <p class="like-count">{{ post.likes }}</p>
+        <p class="comment text-muted">Comment</p>
+    </div>
+{% empty %}
+    <h1>No post yet.</h1>
+{% endfor %}
