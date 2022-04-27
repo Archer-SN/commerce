@@ -125,23 +125,7 @@ def comment(request):
         return HttpResponseRedirect(reverse("index"))
 
     elif request.method == "PUT":
-        data = json.loads(request.body)
-        comment_id = data["id"]
-        comment = Comment.objects.filter(pk=comment_id).first()
-        if not comment:
-            return HttpResponse(status=400)
-
-        # If user has already liked the post, delete the like
-        if request.user.liked_comment.filter(pk=comment_id).exists():
-            comment.remove_like()
-            request.user.like_comment.remove(comment)
-        # Add like if the user hasn't liked the post
-        else:
-            request.user.liked_comment.add(comment)
-            comment.add_like()
-        comment.save()
-        # Returning like count
-        return JsonResponse({"like_count": comment.likes}, status=201)
+        pass
     else:
         return HttpResponse(status=405)
 
@@ -157,21 +141,64 @@ def post(request):
         return HttpResponseRedirect(reverse("index"))
     elif request.method == "PUT":
         data = json.loads(request.body)
-        post_id = data["id"]
-        post = Post.objects.filter(pk=post_id).first()
-        if not post:
+        id = data["id"]
+        content = data["content"]
+
+        if len(content) <= 0:
             return HttpResponse(status=400)
 
-        # If user has already liked the post, delete the like
-        if request.user.liked_post.filter(pk=post_id).exists():
-            post.remove_like()
-            request.user.liked_post.remove(post)
-        # Add like if the user hasn't liked the post
-        else:
-            request.user.liked_post.add(post)
-            post.add_like()
+        post = Post.objects.filter(pk=id).first()
+        if not post:
+            return HttpResponse(status=404)
+
+        post.change_content(content)
         post.save()
-        # Returning like count
-        return JsonResponse({"like_count": post.likes}, status=201)
+
+        return JsonResponse({"new_content": content}, status=201)
+    else:
+        return HttpResponse(status=405)
+
+
+# Handling like system for both post and like
+@login_required
+def like(request):
+    if request.method == "PUT":
+        data = json.loads(request.body)
+        id = data["id"]
+        type = data["type"]
+
+        if type == "post":
+            post = Post.objects.filter(pk=id).first()
+            if not post:
+                return HttpResponse(status=404)
+
+            # If user has already liked the post, delete the like
+            if request.user.liked_post.filter(pk=id).exists():
+                post.remove_like()
+                request.user.liked_post.remove(post)
+            # Add like if the user hasn't liked the post
+            else:
+                request.user.liked_post.add(post)
+                post.add_like()
+            post.save()
+            # Returning like count
+            return JsonResponse({"like_count": post.likes}, status=201)
+
+        elif type == "comment":
+            comment = Comment.objects.filter(pk=id).first()
+            if not comment:
+                return HttpResponse(status=404)
+
+            # If user has already liked the comment, delete the like
+            if request.user.liked_comment.filter(pk=id).exists():
+                comment.remove_like()
+                request.user.like_comment.remove(comment)
+            # Add like if the user hasn't liked the comment
+            else:
+                request.user.liked_comment.add(comment)
+                comment.add_like()
+            comment.save()
+            # Returning like count
+            return JsonResponse({"like_count": comment.likes}, status=201)
     else:
         return HttpResponse(status=405)

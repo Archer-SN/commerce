@@ -5,10 +5,6 @@
     {{ user_data.username }} Profile
 {% endblock %}
 
-{% block head %}
-    <script src="{% static 'network/follow.js' %}"></script>
-{% endblock %}
-
 {% block body %}
     <div>
         <h1 id="profile-name">{{ user_data.username }}</h1>

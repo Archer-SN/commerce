@@ -3,9 +3,13 @@
 {% for post in posts %}
     <div>
         <a href="{% url 'profile' post.author.id %}" class="h5">{{ post.author.username }}</a>
-        <p>Edit</p>
-        <p class="content">{{ post.content }}</p>
-        <p class="text-muted">{{ post.date_created }}</p>
+        <div class="content-container" data-id="{{ post.id }}">
+            {% if post.author == request.user %}
+                <p class="edit-post-btn">Edit</p>
+            {% endif %}
+            <p class="content">{{ post.content }}</p>
+        </div>
+        <p class="date-created text-muted">{{ post.date_created }}</p>
         <button class="like-post-btn" data-id="{{ post.id }}"></button>
         <p class="like-count">{{ post.likes }}</p>
         <p class="comment text-muted">Comment</p>
