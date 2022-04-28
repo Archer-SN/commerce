@@ -3,6 +3,7 @@ from telnetlib import STATUS
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -12,9 +13,15 @@ from .models import User, Post, Comment
 
 
 def index(request):
+    posts = Post.objects.all().order_by("-date_created")
+    paginator = Paginator(posts, 10)
+
+    page_number = request.GET.get("pnum", 1)
+    page_obj = paginator.get_page(page_number)
     return render(request, "network/index.html", {
-        "posts": Post.objects.all().order_by("-date_created"),
-        "title": "All Posts"
+        "page_obj": page_obj,
+        "title": "All Posts",
+        "name": "index"
     })
 
 
@@ -85,10 +92,17 @@ def profile_view(request, user_id):
         is_following = False
     else:
         is_following = request.user.following.filter(id=user_data.id).exists()
+
+    posts = Post.objects.filter(author=user_data)
+    paginator = Paginator(posts, 10)
+
+    page_number = request.GET.get("pnum", 1)
+    page_obj = paginator.get_page(page_number)
     return render(request, "network/profile.html", {
         "user_data": user_data,
         "is_following": is_following,
-        "posts": Post.objects.filter(author=user_data)
+        "page_obj": page_obj,
+        "name": "profile"
     })
 
 
@@ -108,9 +122,17 @@ def following_view(request):
             request.user.following.add(profile_user)
             return JsonResponse({"button_content": "Unfollow", "total_followers": profile_user.total_followers}, status=201)
 
+    posts = Post.objects.filter(
+        author__in=request.user.following.all()).order_by("-date_created")
+    paginator = Paginator(posts, 10)
+
+    page_number = request.GET.get("pnum", 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, "network/index.html", {
-        "posts": Post.objects.filter(author__in=request.user.following.all()).order_by("-date_created"),
-        "title": "Following Posts"
+        "page_obj": page_obj,
+        "title": "Following Posts",
+        "name": "following"
     })
 
 
