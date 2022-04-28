@@ -195,11 +195,11 @@ function createComment(userId, comment) {
 
     if (comment.author_id === userId) {
         const editButton = document.createElement("p");
-        editButton.className = "edit-comment-button";
+        editButton.className = "edit-comment-btn";
         editButton.textContent = "Edit";
-        editButton.addEventListener("click", (e) => handleEdit(e, "comment"))
         
         contentContainer.prepend(editButton);
+        editButton.addEventListener("click", (e) => handleEdit(e, "comment"))
     }
 
     newComment.append(dateCreated, likeButton, likeCount, commentButton);

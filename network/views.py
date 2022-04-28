@@ -129,7 +129,24 @@ def comment(request):
         return HttpResponseRedirect(reverse("index"))
 
     elif request.method == "PUT":
-        pass
+        data = json.loads(request.body)
+        id = data["id"]
+        content = data["content"]
+
+        if len(content) <= 0:
+            return HttpResponse(status=400)
+
+        comment = Comment.objects.filter(pk=id).first()
+        if not comment:
+            return HttpResponse(status=404)
+
+        if request.user.id != comment.author.id:
+            return HttpResponse(status=403)
+
+        comment.change_content(content)
+        comment.save()
+
+        return JsonResponse({"new_content": content}, status=201)
 
     elif request.method == "GET":
         post_id = request.GET.get("id")
