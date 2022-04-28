@@ -8,7 +8,7 @@
 {% endif %}
 
 {% for post in page_obj %}
-    <div>
+    <div class="container my-3 p-3 rounded">
         <a href="{% url 'profile' post.author.id %}" class="h5">{{ post.author.username }}</a>
         <div class="content-container" data-id="{{ post.id }}">
             {% if post.author == request.user %}

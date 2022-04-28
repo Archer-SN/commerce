@@ -1,15 +1,14 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    <h1>{{ title }}</h1>
-    <div>
+    <h1 class="text-left">{{ title }}</h1>
+    <div class="container p-3 rounded">
         <form action="{% url 'post' %}" method="POST">
             {% csrf_token %}
-            <label for="post-content" class="form-label h4">New Post</label>
-            <textarea id="post-content" name="content" rows="3" placeholder="What's on your mind.." class="form-control" required></textarea>
+            <label for="post-content" class="form-label h4 mb-3">New Post</label>
+            <textarea id="post-content" class="form-control mb-3" name="content" rows="3" placeholder="What's on your mind.." class="form-control" required></textarea>
             <input type="submit" value="Post" class="btn btn-primary"> 
         </form>
-        
-        {% include "network/content.html" %}
     </div>
+    {% include "network/content.html" %}
 {% endblock %}
