@@ -118,19 +118,39 @@ def following_view(request):
 def comment(request):
     if request.method == "POST":
         content = request.POST.get("content", "")
-        if len(content) > 0:
-            new_post = Comment(author=request.user, content=content)
-            new_post.save()
+        post_id = request.POST.get("post-id")
+        comment_parent = Post.objects.get(pk=post_id)
+
+        if len(content) > 0 and comment_parent:
+            new_comment = Comment(author=request.user,
+                                  content=content, post=comment_parent)
+            new_comment.save()
 
         return HttpResponseRedirect(reverse("index"))
 
     elif request.method == "PUT":
         pass
+
+    elif request.method == "GET":
+        post_id = request.GET.get("id")
+        post = Post.objects.get(pk=post_id)
+        comments = list(Comment.objects.filter(
+            post=post).order_by("-likes").values())
+
+        # Adding author username to comment array
+        for comment in comments:
+            comment["author_username"] = User.objects.get(
+                pk=comment["author_id"]).username
+
+        return JsonResponse({"comments": comments,
+                             "user_id": request.user.id},
+                            status=200)
+
     else:
         return HttpResponse(status=405)
 
 
-@login_required
+@ login_required
 def post(request):
     if request.method == "POST":
         content = request.POST.get("content", "")
@@ -151,6 +171,9 @@ def post(request):
         if not post:
             return HttpResponse(status=404)
 
+        if request.user.id != post.author.id:
+            return HttpResponse(status=403)
+
         post.change_content(content)
         post.save()
 
@@ -160,7 +183,7 @@ def post(request):
 
 
 # Handling like system for both post and like
-@login_required
+@ login_required
 def like(request):
     if request.method == "PUT":
         data = json.loads(request.body)
