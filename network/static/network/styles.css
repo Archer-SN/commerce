@@ -1,11 +1,14 @@
-body {
-    background-color: #F0F2F5;
+textarea.form-control {
+    resize: none;
 }
 
-div.container {
-    background-color: #FFFFFF;
+.content {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
-textarea {
-    background-color: #F0F2F5;
+.like-post-btn, .like-comment-btn, .edit-post-btn, .comment {
+    user-select: none;
+    cursor: pointer;
 }

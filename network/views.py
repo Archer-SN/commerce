@@ -18,6 +18,10 @@ def index(request):
 
     page_number = request.GET.get("pnum", 1)
     page_obj = paginator.get_page(page_number)
+    if request.user.is_authenticated:
+        for obj in page_obj:
+            obj.is_liked = request.user.liked_post.filter(pk=obj.id).exists()
+
     return render(request, "network/index.html", {
         "page_obj": page_obj,
         "title": "All Posts",
@@ -98,6 +102,10 @@ def profile_view(request, user_id):
 
     page_number = request.GET.get("pnum", 1)
     page_obj = paginator.get_page(page_number)
+    if request.user.is_authenticated:
+        for obj in page_obj:
+            obj.is_liked = request.user.liked_post.filter(pk=obj.id).exists()
+
     return render(request, "network/profile.html", {
         "user_data": user_data,
         "is_following": is_following,
@@ -106,6 +114,7 @@ def profile_view(request, user_id):
     })
 
 
+@login_required
 def following_view(request):
     if request.method == "PUT":
         data = json.loads(request.body)
@@ -128,6 +137,9 @@ def following_view(request):
 
     page_number = request.GET.get("pnum", 1)
     page_obj = paginator.get_page(page_number)
+    if request.user.is_authenticated:
+        for obj in page_obj:
+            obj.is_liked = request.user.liked_post.filter(pk=obj.id).exists()
 
     return render(request, "network/index.html", {
         "page_obj": page_obj,
@@ -136,9 +148,11 @@ def following_view(request):
     })
 
 
-@login_required
 def comment(request):
     if request.method == "POST":
+        if not request.user.is_authenticated:
+            return HttpResponse(status=403)
+
         content = request.POST.get("content", "")
         post_id = request.POST.get("post-id")
         comment_parent = Post.objects.get(pk=post_id)
@@ -148,9 +162,13 @@ def comment(request):
                                   content=content, post=comment_parent)
             new_comment.save()
 
-        return HttpResponseRedirect(reverse("index"))
+        # Return to the previous url
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     elif request.method == "PUT":
+        if not request.user.is_authenticated:
+            return HttpResponse(status=403)
+
         data = json.loads(request.body)
         id = data["id"]
         content = data["content"]
@@ -182,15 +200,18 @@ def comment(request):
                 pk=comment["author_id"]).username
 
         return JsonResponse({"comments": comments,
-                             "user_id": request.user.id},
+                             "user_id": request.user.id,
+                             "is_logged_in": request.user.is_authenticated},
                             status=200)
 
     else:
         return HttpResponse(status=405)
 
 
-@ login_required
 def post(request):
+    if not request.user.is_authenticated:
+        return HttpResponse(status=403)
+
     if request.method == "POST":
         content = request.POST.get("content", "")
         if len(content) > 0:
@@ -222,8 +243,10 @@ def post(request):
 
 
 # Handling like system for both post and like
-@ login_required
 def like(request):
+    if not request.user.is_authenticated:
+        return HttpResponse(status=403)
+
     if request.method == "PUT":
         data = json.loads(request.body)
         id = data["id"]
@@ -238,13 +261,15 @@ def like(request):
             if request.user.liked_post.filter(pk=id).exists():
                 post.remove_like()
                 request.user.liked_post.remove(post)
+                heart_color = "black"
             # Add like if the user hasn't liked the post
             else:
                 request.user.liked_post.add(post)
                 post.add_like()
+                heart_color = "red"
             post.save()
-            # Returning like count
-            return JsonResponse({"like_count": post.likes}, status=201)
+            # Returning like count and color
+            return JsonResponse({"like_count": post.likes, "color": heart_color}, status=201)
 
         elif type == "comment":
             comment = Comment.objects.filter(pk=id).first()
@@ -254,13 +279,15 @@ def like(request):
             # If user has already liked the comment, delete the like
             if request.user.liked_comment.filter(pk=id).exists():
                 comment.remove_like()
-                request.user.like_comment.remove(comment)
+                request.user.liked_comment.remove(comment)
+                heart_color = "black"
             # Add like if the user hasn't liked the comment
             else:
                 request.user.liked_comment.add(comment)
                 comment.add_like()
+                heart_color = "red"
             comment.save()
-            # Returning like count
-            return JsonResponse({"like_count": comment.likes}, status=201)
+            # Returning like count and color
+            return JsonResponse({"like_count": comment.likes, "color": heart_color}, status=201)
     else:
         return HttpResponse(status=405)

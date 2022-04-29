@@ -8,16 +8,20 @@
 {% endif %}
 
 {% for post in page_obj %}
-    <div class="container my-3 p-3 rounded">
+    <div class="container my-3 p-3 rounded border border-1 bg-white">
         <a href="{% url 'profile' post.author.id %}" class="h5">{{ post.author.username }}</a>
         <div class="content-container" data-id="{{ post.id }}">
             {% if post.author == request.user %}
-                <p class="edit-post-btn">Edit</p>
+                <p class="edit-post-btn text-primary">Edit</p>
             {% endif %}
             <p class="content">{{ post.content }}</p>
         </div>
         <p class="date-created text-muted">{{ post.date_created }}</p>
-        <button class="like-post-btn" data-id="{{ post.id }}"></button>
+        {% if post.is_liked %}
+            <i class="like-post-btn bi bi-heart-fill" style="color: red" data-id="{{ post.id }}"></i>
+        {% else %}
+            <i class="like-post-btn bi bi-heart-fill" data-id="{{ post.id }}"></i>
+        {% endif %}
         <p class="like-count">{{ post.likes }}</p>
         <p class="comment text-muted" data-id="{{ post.id }}">Comment</p>
     </div>

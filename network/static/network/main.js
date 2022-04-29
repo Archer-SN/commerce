@@ -53,9 +53,10 @@ function handleLike(e, type) {
     })
     .then(response => response.json())
     .then(data => {
+        e.target.style.color = data.color;
         e.target.parentNode.querySelector(".like-count").textContent = data["like_count"];
     })
-    .catch(error => console.log(error));
+    .catch(error => window.location.replace("/login"));
 }
 
 function handleFollow() {
@@ -93,14 +94,16 @@ function handleEdit(e, type) {
     const clonedEditButton = clonedContentContainer.querySelector(`.edit-${type}-btn`)
 
     const editContainer = document.createElement("div");
+    editContainer.className = "py-3"
 
-    const editAreaDiv = document.createElement("div");
     const editArea = document.createElement("textarea");
     editArea.value = content;
+    editArea.className = "form-control mb-3";
     
-    editAreaDiv.append(editArea);
 
     const submitButton = document.createElement("button");
+    submitButton.className = "btn btn-primary btn-sm mr-2";
+    submitButton.textContent = "Edit"
     submitButton.addEventListener("click", () => {
         editContent = editArea.value;
         fetch(url, {
@@ -119,12 +122,14 @@ function handleEdit(e, type) {
     })
 
     const cancelButton = document.createElement("button");
+    cancelButton.className = "btn btn-light btn-sm";
+    cancelButton.textContent = "Cancel"
     cancelButton.addEventListener("click", () => {
         editContainer.replaceWith(clonedContentContainer);
         clonedEditButton.addEventListener("click", (e) => handleEdit(e, type))
     })
 
-    editContainer.append(editAreaDiv, submitButton, cancelButton);
+    editContainer.append(editArea, submitButton, cancelButton);
 
     contentContainer.replaceWith(editContainer);
 }
@@ -132,9 +137,15 @@ function handleEdit(e, type) {
 function showComment(e) {
     const commentButton = e.target;
     const postId = commentButton.dataset.id;
+
     const commentContainer = document.createElement("div");
+    commentContainer.className = "comment-container"
+    // Hide comments on click
+    commentButton.addEventListener("click", (e) => hideComment(e), { once: true })
+
+    const hr = document.createElement("hr");
     const commentForm = createCommentForm(postId);
-    commentContainer.append(commentForm)
+    commentContainer.append(hr, commentForm)
     
     fetch(`/comment?id=${postId}`, {
         headers: {"X-CSRFToken": csrftoken},
@@ -142,6 +153,10 @@ function showComment(e) {
     })
     .then(response => response.json())
     .then(data => {
+        if (data["is_logged_in"] === false) {
+            commentForm.action = "/login";
+            commentForm.method = "GET"
+        }
         const commentData = data.comments;
         for (let i = 0; i < commentData.length; i++) {
             commentContainer.append(createComment(data["user_id"], commentData[i]))
@@ -155,9 +170,17 @@ function showComment(e) {
     .catch(error => console.log(error))
 }
 
+function hideComment(e) {
+    e.target.parentNode.querySelector(".comment-container").remove()
+    e.target.addEventListener("click", (e) => showComment(e), {once: true})
+}
+
+
 function createComment(userId, comment) {
     console.log(userId, comment);
     const newComment = document.createElement("div");
+
+    const hr = document.createElement("hr");
 
     const profileLink = document.createElement("a");
     profileLink.className = "h5";
@@ -178,8 +201,8 @@ function createComment(userId, comment) {
     dateCreated.className = "date-created text-muted" 
     dateCreated.textContent = comment["date_created"];
 
-    const likeButton = document.createElement("button");
-    likeButton.className = "like-comment-btn";
+    const likeButton = document.createElement("i");
+    likeButton.className = "bi bi-heart-fill like-comment-btn";
     likeButton.dataset.id = comment.id;
     likeButton.addEventListener("click", (e) => handleLike(e, "comment"))
 
@@ -191,7 +214,7 @@ function createComment(userId, comment) {
     commentButton.className = "comment text-muted";
     commentButton.dataset.id = comment.id;
 
-    newComment.append(profileLink, contentContainer)
+    newComment.append(hr, profileLink, contentContainer)
 
     if (comment.author_id === userId) {
         const editButton = document.createElement("p");
@@ -227,10 +250,12 @@ function createCommentForm(postId) {
     commentArea.placeholder = "Write Comment..";
     commentArea.rows = 3;
     commentArea.name = "content";
+    commentArea.className = "form-control mb-3"
 
     const commentSubmit = document.createElement("input");
     commentSubmit.type = "submit";
     commentSubmit.value = "Comment"; 
+    commentSubmit.className = "btn btn-primary btn-sm"
     
     commentForm.append(hiddenCsrftoken, hiddenPostId, commentArea, commentSubmit);
     return commentForm;
