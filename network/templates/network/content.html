@@ -1,11 +1,5 @@
 <!--Defining path to view-->
-{% if name == "index" %}
-    {% url 'index' as path %}
-{% elif name == "profile" %}
-    {% url 'profile' user_data.id as path %}
-{% elif name == "following" %}
-    {% url 'following' as path %}
-{% endif %}
+
 
 {% for post in page_obj %}
     <div class="container my-3 p-3 rounded border border-1 bg-white">
@@ -32,23 +26,23 @@
 <nav aria-label="Page navigation">
     <ul class="pagination">
         {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link" href="{{ path }}?pnum={{ page_obj.previous_page_number }}">Previous</a></li>
+            <li class="page-item"><a class="page-link" href="?pnum={{ page_obj.previous_page_number }}">Previous</a></li>
         {% else %}
             <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
         {% endif %}
         {% for i in page_obj.paginator.page_range %}
             {% if i <= page_obj.number|add:2 and i >= page_obj.number|add:-2 %}
                 {% if i == page_obj.number %}
-                    <li class="page-item active"><a class="page-link" href="{{ path }}?pnum={{ i }}">{{ i }}</a></li>
+                    <li class="page-item active"><a class="page-link" href="?pnum={{ i }}">{{ i }}</a></li>
                 {% else %}
-                    <li class="page-item"><a class="page-link" href="{{ path }}?pnum={{ i }}">{{ i }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?pnum={{ i }}">{{ i }}</a></li>
                 {% endif %}
             {% endif %}
         {% endfor %}
         {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link" href="{{ path }}?pnum={{ page_obj.next_page_number }}">Previous</a></li>
+            <li class="page-item"><a class="page-link" href="?pnum={{ page_obj.next_page_number }}">Next</a></li>
         {% else %}
-            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+            <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
         {% endif %}
     </ul>
 </nav>
